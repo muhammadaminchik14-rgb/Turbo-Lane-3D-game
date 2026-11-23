@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="VOLT RUSH — original 3D neon endless runner in your browser.">
+  <title>VOLT RUSH — Neon Endless Runner</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-box"><span class="hud-label" data-i18n="score">СЧЁТ</span><span id="hud-score">0</span></div>
+      <div class="hud-box"><span class="hud-label" data-i18n="best">РЕКОРД</span><span id="hud-best">0</span></div>
+      <div class="hud-box gold"><span class="hud-label" data-i18n="coins">МОНЕТЫ</span><span id="hud-coins">0</span></div>
+      <div class="hud-box"><span class="hud-label" data-i18n="distance">ДИСТ.</span><span id="hud-dist">0 м</span></div>
+      <button id="btn-pause" class="icon-btn" aria-label="pause">II</button>
+    </div>
+
+    <div id="power-timers"></div>
+    <div id="popups"></div>
+    <div id="toasts"></div>
+
+    <div id="key-hints">
+      <span class="key">← →</span><span data-i18n="moveHint">ПОЛОСЫ</span>
+      <span class="key">↑ / Space</span><span data-i18n="jumpHint">ПРЫЖОК</span>
+      <span class="key">↓</span><span data-i18n="slideHint">СКОЛЬЖЕНИЕ</span>
+    </div>
+
+    <div id="touch-controls" class="hidden">
+      <button class="tbtn" data-act="left">◀</button>
+      <button class="tbtn" data-act="right">▶</button>
+      <div class="tbtn-col">
+        <button class="tbtn" data-act="jump">▲</button>
+        <button class="tbtn" data-act="slide">▼</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== LOADING ===================== -->
+  <section class="screen center" id="screen-loading">
+    <div class="logo-mini">VOLT&nbsp;RUSH</div>
+    <div class="loader"></div>
+  </section>
+
+  <!-- ===================== MAIN MENU ===================== -->
+  <section class="screen center" id="screen-menu">
+    <div class="title-wrap">
+      <h1 class="game-title">VOLT<span>RUSH</span></h1>
+      <p class="tagline" data-i18n="tagline">Беги по неоновым путям</p>
+    </div>
+    <nav class="menu-list">
+      <button id="btn-play" class="btn primary big" data-i18n="play">ИГРАТЬ</button>
+      <button id="btn-chars" class="btn" data-i18n="characters">ПЕРСОНАЖИ</button>
+      <button id="btn-shop" class="btn" data-i18n="shop">МАГАЗИН</button>
+      <button id="btn-missions" class="btn" data-i18n="missions">ЗАДАНИЯ</button>
+      <button id="btn-lb" class="btn" data-i18n="leaderboard">РЕКОРДЫ</button>
+      <button id="btn-settings" class="btn" data-i18n="settings">НАСТРОЙКИ</button>
+    </nav>
+    <div class="menu-coins"><span class="coin-dot"></span><span id="menu-coins">0</span></div>
+  </section>
+
+  <!-- ===================== CHARACTERS ===================== -->
+  <section class="screen" id="screen-characters">
+    <header class="screen-head">
+      <button class="btn back btn-back" data-from="menu" data-i18n="back">НАЗАД</button>
+      <h2 data-i18n="characters">ПЕРСОНАЖИ</h2>
+      <div class="coins-chip"><span class="coin-dot"></span><span id="char-coins">0</span></div>
+    </header>
+    <div class="char-layout">
+      <div class="char-preview-box">
+        <canvas id="char-preview"></canvas>
+        <div class="char-info">
+          <h3 id="char-name">Alex</h3>
+          <p id="char-desc">—</p>
+          <div id="char-price" class="char-price"></div>
+          <button id="char-action" class="btn primary">ВЫБРАТЬ</button>
+        </div>
+      </div>
+      <div id="char-grid" class="char-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== SHOP ===================== -->
+  <section class="screen" id="screen-shop">
+    <header class="screen-head">
+      <button class="btn back btn-back" data-from="menu" data-i18n="back">НАЗАД</button>
+      <h2 data-i18n="shop">МАГАЗИН</h2>
+      <div class="coins-chip"><span class="coin-dot"></span><span id="shop-coins">0</span></div>
+    </header>
+    <div class="tabs">
+      <button id="tab-power" class="btn tab active" data-i18n="tabPower">ПАВЕР-АПЫ</button>
+      <button id="tab-upgrades" class="btn tab" data-i18n="tabUpgrades">АПГРЕЙДЫ</button>
+    </div>
+    <div id="shop-list" class="shop-list"></div>
+  </section>
+
+  <!-- ===================== MISSIONS ===================== -->
+  <section class="screen" id="screen-missions">
+    <header class="screen-head">
+      <button class="btn back btn-back" data-from="menu" data-i18n="back">НАЗАД</button>
+      <h2 data-i18n="missions">ЗАДАНИЯ</h2>
+      <div class="coins-chip"><span class="coin-dot"></span><span id="missions-coins">0</span></div>
+    </header>
+    <div id="mission-list" class="mission-list"></div>
+  </section>
+
+  <!-- ===================== LEADERBOARD ===================== -->
+  <section class="screen" id="screen-leaderboard">
+    <header class="screen-head">
+      <button class="btn back btn-back" data-from="menu" data-i18n="back">НАЗАД</button>
+      <h2 data-i18n="leaderboard">РЕКОРДЫ</h2>
+      <div class="coins-chip"><span class="coin-dot"></span><span id="lb-coins">0</span></div>
+    </header>
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th data-i18n="place">№</th>
+          <th data-i18n="runner">БЕГУН</th>
+          <th data-i18n="m_score">СЧЁТ</th>
+          <th data-i18n="m_dist">ДИСТ.</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+  </section>
+
+  <!-- ===================== SETTINGS ===================== -->
+  <section class="screen" id="screen-settings">
+    <header class="screen-head">
+      <button class="btn back btn-back" data-from="menu" data-i18n="back">НАЗАД</button>
+      <h2 data-i18n="settings">НАСТРОЙКИ</h2>
+      <div class="coins-chip"><span class="coin-dot"></span><span id="set-coins">0</span></div>
+    </header>
+    <div class="settings-list">
+      <div class="setting-row">
+        <span data-i18n="sound">Звук</span>
+        <button id="set-sound" class="btn toggle on">ON</button>
+      </div>
+      <div class="setting-row">
+        <span data-i18n="music">Музыка</span>
+        <button id="set-music" class="btn toggle on">ON</button>
+      </div>
+      <div class="setting-row">
+        <span data-i18n="quality">Качество графики</span>
+        <div class="seg">
+          <button class="btn small" data-q="low" data-i18n="qLow">Низкое</button>
+          <button class="btn small active" data-q="medium" data-i18n="qMedium">Среднее</button>
+          <button class="btn small" data-q="high" data-i18n="qHigh">Высокое</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span data-i18n="swipe">Чувствительность свайпов</span>
+        <div class="range-wrap">
+          <input id="set-swipe" type="range" min="0.5" max="2" step="0.1" value="1">
+          <b id="swipe-val">1.0</b>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span data-i18n="language">Язык</span>
+        <div class="seg">
+          <button class="btn small" data-lang="ru">RU</button>
+          <button class="btn small active" data-lang="en">EN</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span data-i18n="fullscreen">Полный экран</span>
+        <button id="set-fs" class="btn small">Во весь экран</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAUSE ===================== -->
+  <section class="screen center" id="screen-pause">
+    <div class="panel">
+      <h2 data-i18n="paused">ПАУЗА</h2>
+      <button id="btn-resume" class="btn primary big" data-i18n="resume">ПРОДОЛЖИТЬ</button>
+      <button id="btn-pause-menu" class="btn" data-i18n="toMenu">МЕНЮ</button>
+    </div>
+  </section>
+
+  <!-- ===================== GAME OVER ===================== -->
+  <section class="screen center" id="screen-gameover">
+    <div class="panel gameover">
+      <h2 data-i18n="gameOver">ЗАБЕГ ОКОНЧЕН</h2>
+      <div id="go-newbest" class="newbest hidden" data-i18n="newBest">НОВЫЙ РЕКОРД!</div>
+      <div class="go-stats">
+        <div class="go-stat"><span data-i18n="score">СЧЁТ</span><b id="go-score">0</b></div>
+        <div class="go-stat gold"><span data-i18n="coins">МОНЕТЫ</span><b id="go-coins">0</b></div>
+        <div class="go-stat"><span data-i18n="distance">ДИСТАНЦИЯ</span><b id="go-dist">0 м</b></div>
+        <div class="go-stat"><span data-i18n="best">РЕКОРД</span><b id="go-best">0</b></div>
+      </div>
+      <div class="go-buttons">
+        <button id="go-retry" class="btn primary big" data-i18n="retry">ЕЩЁ РАЗ</button>
+        <button id="go-chars" class="btn" data-i18n="characters">ПЕРСОНАЖИ</button>
+        <button id="go-menu" class="btn" data-i18n="toMenu">МЕНЮ</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
